@@ -1,76 +1,96 @@
-<!doctype html>
-<meta charset="UTF-8" />
-<title>Auth0 Sample App</title>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Proton_Bees_DZ - Connexion Auth0</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            text-align: center;
+            width: 350px;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            margin: 10px 0;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: scale(1.05);
+        }
+        #loginBtn {
+            background: #667eea;
+            color: white;
+        }
+        #logoutBtn {
+            background: #e74c3c;
+            color: white;
+            display: none;
+        }
+    </style>
+    <!-- SDK Auth0 -->
+    <script src="https://cdn.auth0.com/js/auth0/10.21.0/auth0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>🐝 Proton_Bees_DZ</h1>
+        <p>Bienvenue sur mon site sécurisé</p>
+        <br>
+        <button id="loginBtn">Se connecter</button>
+        <button id="logoutBtn">Se déconnecter</button>
+    </div>
 
-<div id="view-loading">Loading...</div>
+    <script>
+        // Configuration Auth0 avec VOS informations
+        const auth0 = new auth0.WebAuth({
+            domain: 'dev-ituborkqe1yjnm7.us.auth0.com',
+            clientID: 'kN3iD3JjuZCtSHcieCqfyXyipnftxHWA',
+            redirectUri: 'http://localhost:3000/',
+            responseType: 'code',
+            scope: 'openid profile email'
+        });
 
-<div id="view-error" hidden></div>
+        // Vérifier si déjà connecté quand on charge la page
+        auth0.checkSession({}, (err, authResult) => {
+            if (err || !authResult) {
+                // Pas connecté
+                document.getElementById('loginBtn').style.display = 'inline-block';
+                document.getElementById('logoutBtn').style.display = 'none';
+            } else {
+                // Déjà connecté
+                document.getElementById('loginBtn').style.display = 'none';
+                document.getElementById('logoutBtn').style.display = 'inline-block';
+                alert(`Bienvenue ${authResult.idTokenPayload.name} !`);
+            }
+        });
 
-<div id="view-authenticated" hidden>
-  <p>Logged in as <span id="user-email"></span></p>
-  <h1>User Profile</h1>
-  <!-- highlight-start user-profile -->
-  <pre id="user-profile"></pre>
-  <!-- highlight-end user-profile -->
-  <!-- highlight-start logout -->
-  <button onclick="client.logout({logoutParams:{returnTo:location.origin}})">Logout</button>
-  <!-- highlight-end logout -->
-</div>
+        // Bouton Se connecter
+        document.getElementById('loginBtn').addEventListener('click', () => {
+            auth0.authorize();
+        });
 
-<div id="view-unauthenticated" hidden>
-  <!-- highlight-start login-signup -->
-  <button onclick="client.loginWithRedirect({authorizationParams:{screen_hint:'signup'}})">Signup</button>
-  <button onclick="client.loginWithRedirect()">Login</button>
-  <!-- highlight-end login-signup -->
-</div>
-
-<!-- Install the Auth0 SPA SDK -->
-<!-- highlight-start add-sdk -->
-<script src="https://cdn.auth0.com/js/auth0-spa-js/%SDK_VERSION%/auth0-spa-js.production.js"></script>
-<!-- highlight-end add-sdk -->
-
-<script>
-  // Helpers
-  const displayView = name => ['loading', 'error', 'authenticated', 'unauthenticated'].forEach(v => document.getElementById(`view-${v}`).hidden = v !== name);
-  const setTextContent = (id, content) => document.getElementById(id).textContent = content;
-
-  (async () => {
-    // Initialize the Auth0 SDK
-    /* highlight-start init-client */
-    window.client = await auth0.createAuth0Client({
-      domain: '%AUTH0_DOMAIN%',
-      clientId: '%AUTH0_CLIENT_ID%',
-      authorizationParams: { redirect_uri: location.origin },
-    });
-    /* highlight-end init-client */
-
-    // Handle errors returned by Auth0 after a redirect
-    if (location.search.includes("error=")) {
-      const params = new URLSearchParams(location.search);
-      setTextContent("view-error", `Error: ${params.get("error")} — ${params.get("error_description")}`);
-      displayView("error");
-      history.replaceState({}, "", location.pathname);
-      return;
-    }
-
-    // Handle the redirect callback after a successful login
-    if (location.search.includes("code=") && location.search.includes("state=")) {
-      /* highlight-start handle-callback */
-      await window.client.handleRedirectCallback();
-      /* highlight-end handle-callback */
-      history.replaceState({}, "", location.pathname);
-    }
-
-    if (await window.client.isAuthenticated()) {
-      /* highlight-start get-user */
-      const user = await window.client.getUser();
-      /* highlight-end get-user */
-      setTextContent("user-email", user.email);
-      setTextContent("user-profile", JSON.stringify(user, null, 2));
-      displayView("authenticated");
-      return;
-    }
-
-    displayView("unauthenticated");
-  })();
-</script>
+        // Bouton Se déconnecter
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            auth0.logout({
+                returnTo: 'http://localhost:3000/',
+                clientID: 'kN3iD3JjuZCtSHcieCqfyXyipnftxHWA'
+            });
+        });
+    </script>
+</body>
+</html>
